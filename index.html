@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Products</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+  <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between p-4 hidden md:flex">
+      <div>
+        <div class="flex items-center space-x-3 mb-8 px-2">
+          <i data-lucide="shopping-bag" class="w-8 h-8 text-indigo-400"></i>
+          <span class="text-xl font-bold">Admin Panel</span>
+        </div>
+        <nav class="space-y-2">
+          <a href="#" class="flex items-center space-x-3 px-4 py-3 bg-indigo-600 rounded-lg text-white font-medium">
+            <i data-lucide="box" class="w-5 h-5"></i>
+            <span>Mahsulotlar</span>
+          </a>
+        </nav>
+      </div>
+      <div class="text-xs text-slate-500 text-center border-t border-slate-800 pt-4">
+        &copy; 2026 Admin Dashboard
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-y-auto">
+      <!-- Header -->
+      <header class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10">
+        <h1 class="text-2xl font-bold text-gray-800">Mahsulotlar Boshqaruvi</h1>
+        <button onclick="openModal()" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow transition">
+          <i data-lucide="plus" class="w-5 h-5"></i>
+          <span>Yangi Mahsulot</span>
+        </button>
+      </header>
+
+      <!-- Main Body -->
+      <div class="p-6">
+        <!-- Notification Toast -->
+        <div id="toast" class="hidden mb-4 p-4 rounded-lg text-white font-medium shadow-md transition-all"></div>
+
+        <!-- Products Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-gray-50 border-b border-gray-100 text-xs uppercase font-semibold text-gray-500 tracking-wider">
+                <th class="p-4">Rasm</th>
+                <th class="p-4">Nomi</th>
+                <th class="p-4">Kategoriya</th>
+                <th class="p-4">Narxi</th>
+                <th class="p-4">Zaxira</th>
+                <th class="p-4 text-center">Amallar</th>
+              </tr>
+            </thead>
+            <tbody id="products-table" class="divide-y divide-gray-100 text-sm">
+              <tr>
+                <td colspan="6" class="text-center py-8 text-gray-500">Yuklanmoqda...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Create/Edit Modal -->
+  <div id="modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-4 mb-4">
+        <h3 id="modal-title" class="text-lg font-bold text-gray-800">Yangi Mahsulot Qo'shish</h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <form id="product-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+        <input type="hidden" id="product-id">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Mahsulot Nomi (productName)</label>
+          <input type="text" id="productName" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Narxi ($)</label>
+            <input type="number" step="0.01" id="price" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Zaxira (stock)</label>
+            <input type="number" id="stock" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Kategoriya</label>
+          <input type="text" id="category" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Rasm yuklash (Fayl tanlang)</label>
+          <input type="file" id="image-file" accept="image/*" onchange="handleImageUpload(event)" class="w-full border rounded-lg p-1.5 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700">
+          <input type="hidden" id="image-url">
+          <div id="image-preview-container" class="mt-2 hidden">
+            <img id="image-preview" src="" alt="Preview" class="w-20 h-20 object-contain border rounded p-1 bg-gray-50">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tavsif (description)</label>
+          <textarea id="description" rows="3" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <div class="flex justify-end space-x-3 pt-4 border-t">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Bekor qilish</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript Code -->
+  <script>
+    const API_URL = 'https://fake.jsonmockapi.com/products';
+    let products = [];
+    const FALLBACK_IMAGE = "https://placehold.co/300x300/1a1a1a/ffffff?text=No+Image&font=Lato";
+
+    lucide.createIcons();
+
+    // 1. GET: Serverdan ma'lumotlarni olish
+    async function fetchProducts() {
+      try {
+        const res = await fetch(`${API_URL}?length=10`);
+        const data = await res.json();
+        products = Array.isArray(data) ? data : (data.data || []);
+        renderProducts(products);
+      } catch (err) {
+        showToast("Serverdan ma'lumotlarni olishda xatolik!", "bg-red-500");
+      }
+    }
+
+    function renderProducts(data) {
+      const tbody = document.getElementById('products-table');
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">Mahsulotlar topilmadi.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = data.map(item => {
+        // API tuzilishidagi images massividan thumbnail yoki url olish
+        let imgSrc = FALLBACK_IMAGE;
+        if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+          imgSrc = item.images[0].thumbnail || item.images[0].url || FALLBACK_IMAGE;
+        }
+
+        return `
+        <tr class="hover:bg-gray-50/50 transition">
+          <td class="p-4">
+            <img src="${imgSrc}" alt="${item.productName}" class="w-12 h-12 object-contain bg-white p-1 rounded border" onerror="this.src='${FALLBACK_IMAGE}'">
+          </td>
+          <td class="p-4 font-medium text-gray-800 max-w-xs truncate" title="${item.productName}">
+            ${item.productName || 'Nomsiz'}
+          </td>
+          <td class="p-4">
+            <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold uppercase">
+              ${item.category || 'umumiy'}
+            </span>
+          </td>
+          <td class="p-4 font-bold text-gray-900">$${item.price || 0}</td>
+          <td class="p-4 text-gray-600">${item.stock || 0} dona</td>
+          <td class="p-4 text-center">
+            <div class="flex items-center justify-center space-x-2">
+              <button onclick="editProduct(${item.id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Tahrirlash">
+                <i data-lucide="pencil" class="w-4 h-4"></i>
+              </button>
+              <button onclick="deleteProduct(${item.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="O'chirish">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    // Fayldan rasm yuklash
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64String = e.target.result;
+          document.getElementById('image-url').value = base64String;
+          const preview = document.getElementById('image-preview');
+          preview.src = base64String;
+          document.getElementById('image-preview-container').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function openModal(isEdit = false) {
+      document.getElementById('modal-title').innerText = isEdit ? "Mahsulotni Tahrirlash" : "Yangi Mahsulot Qo'shish";
+      document.getElementById('modal').classList.remove('hidden');
+      document.getElementById('modal').classList.add('flex');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('modal').classList.remove('flex');
+      document.getElementById('product-form').reset();
+      document.getElementById('product-id').value = '';
+      document.getElementById('image-url').value = '';
+      document.getElementById('image-preview-container').classList.add('hidden');
+    }
+
+    // 2 & 3. POST / PUT So'rovlarini APIga yuborish
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('product-id').value;
+      const existingItem = id ? products.find(p => p.id == id) : null;
+
+      const imgVal = document.getElementById('image-url').value;
+      
+      // Siz taqdim etgan formatdagi images massivini shakllantirish
+      const imagesPayload = imgVal 
+        ? [{ url: imgVal, thumbnail: imgVal }] 
+        : (existingItem ? existingItem.images : [{ url: FALLBACK_IMAGE, thumbnail: FALLBACK_IMAGE }]);
+
+      const payload = {
+        productName: document.getElementById('productName').value,
+        price: parseFloat(document.getElementById('price').value),
+        stock: parseInt(document.getElementById('stock').value) || 0,
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value,
+        images: imagesPayload
+      };
+
+      try {
+        if (id) {
+          // PUT So'rovi
+          await fetch(`${API_URL}/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          
+          products = products.map(p => p.id == id ? { ...p, ...payload } : p);
+          showToast("Mahsulot serverda yangilandi!", "bg-emerald-600");
+        } else {
+          // POST So'rovi
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const created = await res.json();
+          
+          const newProduct = { ...payload, id: created.id || Date.now() };
+          products.unshift(newProduct);
+          showToast("Mahsulot serverga qo'shildi!", "bg-emerald-600");
+        }
+        renderProducts(products);
+        closeModal();
+      } catch (err) {
+        showToast("Server bilan aloqada xatolik yuz berdi!", "bg-red-500");
+      }
+    }
+
+    function editProduct(id) {
+      const item = products.find(p => p.id === id);
+      if (!item) return;
+
+      document.getElementById('product-id').value = item.id;
+      document.getElementById('productName').value = item.productName || '';
+      document.getElementById('price').value = item.price || 0;
+      document.getElementById('stock').value = item.stock || 0;
+      document.getElementById('category').value = item.category || '';
+      document.getElementById('description').value = item.description || '';
+
+      let currentImg = "";
+      if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+        currentImg = item.images[0].thumbnail || item.images[0].url || "";
+      }
+      
+      document.getElementById('image-url').value = currentImg;
+      if (currentImg) {
+        document.getElementById('image-preview').src = currentImg;
+        document.getElementById('image-preview-container').classList.remove('hidden');
+      }
+
+      openModal(true);
+    }
+
+    // 4. DELETE So'rovi
+    async function deleteProduct(id) {
+      if (!confirm("Haqiqatan ham bu mahsulotni o'chirmoqchimisiz?")) return;
+
+      try {
+        await fetch(`${API_URL}/${id}`, {
+          method: 'DELETE'
+        });
+
+        products = products.filter(p => p.id !== id);
+        renderProducts(products);
+        showToast("Mahsulot serverdan o'chirildi!", "bg-slate-700");
+      } catch (err) {
+        showToast("O'chirishda xatolik yuz berdi!", "bg-red-500");
+      }
+    }
+
+    function showToast(message, bgColor) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.className = `mb-4 p-4 rounded-lg text-white font-medium shadow-md transition-all ${bgColor}`;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    // Dastlabki ishga tushish
+    fetchProducts();
+  </script>
+</body>
+</html>  
