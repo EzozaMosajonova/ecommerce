@@ -1,328 +1,306 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="uz" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Products</title>
-  <!-- Tailwind CSS CDN -->
+  <title>REST API Loyihalash va Postman Testlash</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Animate.css for smooth animations -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <style>
+    .slide {
+      display: none !important;
+    }
+    .slide.active {
+      display: flex !important;
+    }
+  </style>
 </head>
-<body class="bg-gray-50 font-sans antialiased">
+<body class="bg-slate-950 text-slate-100 font-sans h-screen flex flex-col justify-between overflow-hidden">
 
-  <div class="flex h-screen overflow-hidden">
-    <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col justify-between p-4 hidden md:flex">
-      <div>
-        <div class="flex items-center space-x-3 mb-8 px-2">
-          <i data-lucide="shopping-bag" class="w-8 h-8 text-indigo-400"></i>
-          <span class="text-xl font-bold">Admin Panel</span>
-        </div>
-        <nav class="space-y-2">
-          <a href="#" class="flex items-center space-x-3 px-4 py-3 bg-indigo-600 rounded-lg text-white font-medium">
-            <i data-lucide="box" class="w-5 h-5"></i>
-            <span>Mahsulotlar</span>
-          </a>
-        </nav>
-      </div>
-      <div class="text-xs text-slate-500 text-center border-t border-slate-800 pt-4">
-        &copy; 2026 Admin Dashboard
-      </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col overflow-y-auto">
-      <!-- Header -->
-      <header class="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-        <h1 class="text-2xl font-bold text-gray-800">Mahsulotlar Boshqaruvi</h1>
-        <button onclick="openModal()" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow transition">
-          <i data-lucide="plus" class="w-5 h-5"></i>
-          <span>Yangi Mahsulot</span>
-        </button>
-      </header>
-
-      <!-- Main Body -->
-      <div class="p-6">
-        <!-- Notification Toast -->
-        <div id="toast" class="hidden mb-4 p-4 rounded-lg text-white font-medium shadow-md transition-all"></div>
-
-        <!-- Products Table -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-gray-50 border-b border-gray-100 text-xs uppercase font-semibold text-gray-500 tracking-wider">
-                <th class="p-4">Rasm</th>
-                <th class="p-4">Nomi</th>
-                <th class="p-4">Kategoriya</th>
-                <th class="p-4">Narxi</th>
-                <th class="p-4">Zaxira</th>
-                <th class="p-4 text-center">Amallar</th>
-              </tr>
-            </thead>
-            <tbody id="products-table" class="divide-y divide-gray-100 text-sm">
-              <tr>
-                <td colspan="6" class="text-center py-8 text-gray-500">Yuklanmoqda...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- Create/Edit Modal -->
-  <div id="modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center border-b pb-4 mb-4">
-        <h3 id="modal-title" class="text-lg font-bold text-gray-800">Yangi Mahsulot Qo'shish</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
-          <i data-lucide="x" class="w-6 h-6"></i>
-        </button>
-      </div>
-
-      <form id="product-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
-        <input type="hidden" id="product-id">
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Mahsulot Nomi (productName)</label>
-          <input type="text" id="productName" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Narxi ($)</label>
-            <input type="number" step="0.01" id="price" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Zaxira (stock)</label>
-            <input type="number" id="stock" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Kategoriya</label>
-          <input type="text" id="category" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Rasm yuklash (Fayl tanlang)</label>
-          <input type="file" id="image-file" accept="image/*" onchange="handleImageUpload(event)" class="w-full border rounded-lg p-1.5 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700">
-          <input type="hidden" id="image-url">
-          <div id="image-preview-container" class="mt-2 hidden">
-            <img id="image-preview" src="" alt="Preview" class="w-20 h-20 object-contain border rounded p-1 bg-gray-50">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tavsif (description)</label>
-          <textarea id="description" rows="3" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-        </div>
-
-        <div class="flex justify-end space-x-3 pt-4 border-t">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50">Bekor qilish</button>
-          <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">Saqlash</button>
-        </div>
-      </form>
+  <!-- Top Navigation / Progress -->
+  <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 px-8 py-4 flex justify-between items-center z-10">
+    <div class="flex items-center space-x-3">
+      <i data-lucide="layers" class="w-6 h-6 text-indigo-400"></i>
+      <span class="font-bold text-lg tracking-wide">REST API & Postman Masterclass</span>
     </div>
-  </div>
 
-  <!-- JavaScript Code -->
-  <script>
-    const API_URL = 'https://fake.jsonmockapi.com/products';
-    let products = [];
-    const FALLBACK_IMAGE = "https://placehold.co/300x300/1a1a1a/ffffff?text=No+Image&font=Lato";
+    <!-- Admin Panelga o'tish tugmasi -->
+    <div class="flex items-center space-x-4">
+      <a href="adminpanel.html" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-semibold text-sm transition shadow-lg">
+        <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+        <span>Admin Panelga O'tish</span>
+      </a>
+      <div id="slide-indicator" class="text-sm font-semibold text-indigo-400 bg-indigo-950 px-3 py-1 rounded-full border border-indigo-800">
+        Slayd 1 / 7
+      </div>
+    </div>
+  </header>
 
-    lucide.createIcons();
+  <!-- Main Presentation Container -->
+  <main class="flex-1 relative overflow-y-auto p-8 md:p-16 flex items-center justify-center">
 
-    // 1. GET: Serverdan ma'lumotlarni olish
-    async function fetchProducts() {
-      try {
-        const res = await fetch(`${API_URL}?length=10`);
-        const data = await res.json();
-        products = Array.isArray(data) ? data : (data.data || []);
-        renderProducts(products);
-      } catch (err) {
-        showToast("Serverdan ma'lumotlarni olishda xatolik!", "bg-red-500");
-      }
-    }
+    <!-- SLAYD 1: Kirish -->
+    <div class="slide active flex-col items-center text-center max-w-4xl space-y-6 animate__animated animate__fadeIn">
+      <div class="p-4 bg-indigo-600/20 border border-indigo-500/30 rounded-full text-indigo-400 mb-2">
+        <i data-lucide="server" class="w-16 h-16"></i>
+      </div>
+      <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+        REST API Loyihalash va Postman Orqali Testlash
+      </h1>
+      <p class="text-lg md:text-xl text-slate-400 max-w-2xl">
+        Zamonaviy dasturiy ta'minot arxitekturasi, CRUD operatsiyalari va API xavfsizligini professional darajada sinovdan o'tkazish.
+      </p>
+      
+      <!-- Talaba va o'qituvchi ma'lumotlari -->
+      <div class="pt-4 flex flex-col items-start gap-2 text-sm text-slate-300 bg-slate-900/90 px-8 py-4 rounded-xl border border-slate-800 shadow-md">
+        <span class="flex items-center gap-2">
+          <i data-lucide="user" class="w-4 h-4 text-indigo-400"></i> 
+          <b>Ma'ruzachi:</b> AT-53/24 guruh talabasi Mo'sajonova E'zozxon
+        </span>
+        <span class="flex items-center gap-2">
+          <i data-lucide="award" class="w-4 h-4 text-emerald-400"></i> 
+          <b>Tekshirdi:</b> Salimova Husniya Rustamovna
+        </span>
+        <span class="flex items-center gap-2">
+          <i data-lucide="calendar" class="w-4 h-4 text-cyan-400"></i> 
+          <b>Sana:</b> 2026-yil
+        </span>
+      </div>
+    </div>
 
-    function renderProducts(data) {
-      const tbody = document.getElementById('products-table');
-      if (!data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">Mahsulotlar topilmadi.</td></tr>';
-        return;
-      }
+    <!-- SLAYD 2: API nima? -->
+    <div class="slide flex-col max-w-5xl space-y-6 animate__animated animate__fadeIn">
+      <h2 class="text-3xl font-bold text-indigo-400 flex items-center gap-3">
+        <i data-lucide="help-circle" class="w-8 h-8"></i> API Nima va U Qanday Ishlaydi?
+      </h2>
+      <p class="text-slate-300 text-lg">
+       API (Application Programming Interface, “dasturlash interfeysi”) dasturlar o’zaro gaplashishi uchun qoidalar to’plami. Bir dastur ikkinchisidan ma’lumot so’raydi yoki biror amalni bajarishni buyuradi, API esa buning yo’lini belgilaydi.
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-2">
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-3">
+          <h3 class="font-bold text-indigo-300 text-base flex items-center gap-2">
+            <i data-lucide="utensils" class="w-5 h-5"></i> Hayotiy Misol (Ofitsiant Analogiyasi):
+          </h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            Restoranda mijoz oshxonaga o'tib ovqat pishirmaydi. Mijoz buyurtmani **ofitsiantga (API)** beradi. Ofitsiant so'rovni **oshxonaga (Server)** olib boradi va tayyor natijani mijozga olib keladi.
+          </p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-xl flex flex-col items-center">
+          <img src="https://miro.medium.com/v2/resize:fit:1400/0*RPnhGYC-I73DegE0.png" alt="API Architecture" class="w-full h-60 object-cover rounded-lg border border-slate-800 opacity-90">
+          <span class="text-xs text-slate-400 mt-2">Mijoz (Client) va Server o'rtasidagi so'rov-javob zanjiri</span>
+        </div>
+      </div>
+    </div>
 
-      tbody.innerHTML = data.map(item => {
-        // API tuzilishidagi images massividan thumbnail yoki url olish
-        let imgSrc = FALLBACK_IMAGE;
-        if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-          imgSrc = item.images[0].thumbnail || item.images[0].url || FALLBACK_IMAGE;
-        }
+    <!-- SLAYD 3: REST API nima? -->
+    <div class="slide flex-col max-w-5xl space-y-6 animate__animated animate__fadeIn">
+      <h2 class="text-3xl font-bold text-indigo-400 flex items-center gap-3">
+        <i data-lucide="globe" class="w-8 h-8"></i> 1. REST API Arxitekturasi Asoslari
+      </h2>
+      <p class="text-slate-300 text-lg">
+        **REST** (Representational State Transfer) — veb-xizmatlar o’zaro HTTP orqali ma’lumot almashishining eng keng tarqalgan uslubi. Bu qat’iy standart emas, balki ma’lum tamoyillarga amal qiladigan API yaratish yondashuvi.
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl hover:border-indigo-500 transition">
+          <i data-lucide="link" class="w-8 h-8 text-indigo-400 mb-3"></i>
+          <h3 class="font-bold text-lg mb-2">Resursga Yo'naltirilgan</h3>
+          <p class="text-sm text-slate-400">Har bir obyekt o'zining aniq URL manziliga ega bo'ladi (`/api/products`).</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl hover:border-indigo-500 transition">
+          <i data-lucide="refresh-cw" class="w-8 h-8 text-cyan-400 mb-3"></i>
+          <h3 class="font-bold text-lg mb-2">Stateless (Holatsiz)</h3>
+          <p class="text-sm text-slate-400">Har bir so'rov o'zida barcha kerakli ma'lumotlarni saqlaydi.</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl hover:border-indigo-500 transition">
+          <i data-lucide="code" class="w-8 h-8 text-emerald-400 mb-3"></i>
+          <h3 class="font-bold text-lg mb-2">JSON Format</h3>
+          <p class="text-sm text-slate-400">Ma'lumotlar universal JSON formatida uzatiladi.</p>
+        </div>
+      </div>
+    </div>
 
-        return `
-        <tr class="hover:bg-gray-50/50 transition">
-          <td class="p-4">
-            <img src="${imgSrc}" alt="${item.productName}" class="w-12 h-12 object-contain bg-white p-1 rounded border" onerror="this.src='${FALLBACK_IMAGE}'">
-          </td>
-          <td class="p-4 font-medium text-gray-800 max-w-xs truncate" title="${item.productName}">
-            ${item.productName || 'Nomsiz'}
-          </td>
-          <td class="p-4">
-            <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold uppercase">
-              ${item.category || 'umumiy'}
-            </span>
-          </td>
-          <td class="p-4 font-bold text-gray-900">$${item.price || 0}</td>
-          <td class="p-4 text-gray-600">${item.stock || 0} dona</td>
-          <td class="p-4 text-center">
-            <div class="flex items-center justify-center space-x-2">
-              <button onclick="editProduct(${item.id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Tahrirlash">
-                <i data-lucide="pencil" class="w-4 h-4"></i>
-              </button>
-              <button onclick="deleteProduct(${item.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="O'chirish">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
+    <!-- SLAYD 4: CRUD Operatsiyalari va HTTP Metodlari -->
+    <div class="slide flex-col max-w-5xl space-y-6 animate__animated animate__fadeIn">
+      <h2 class="text-3xl font-bold text-indigo-400 flex items-center gap-3">
+        <i data-lucide="database" class="w-8 h-8"></i> 2. CRUD Operatsiyalari va HTTP Metodlari
+      </h2>
+      <p class="text-slate-300">Ma'lumotlar bazasi bilan ishlashning to'rt asosiy ustuni:</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+        <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-900 border-l-4 border-emerald-500 p-4 rounded-r-xl flex items-start gap-4">
+            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 font-bold rounded text-xs uppercase">GET</span>
+            <div>
+              <h4 class="font-bold">Olish (Read)</h4>
+              <p class="text-sm text-slate-400">Serverdan ma'lumotlarni o'qish uchun. Status: <code class="text-emerald-400">200 OK</code></p>
             </div>
-          </td>
-        </tr>
-      `;
-      }).join('');
-      lucide.createIcons();
-    }
+          </div>
+          <div class="bg-slate-900 border-l-4 border-indigo-500 p-4 rounded-r-xl flex items-start gap-4">
+            <span class="px-3 py-1 bg-indigo-500/20 text-indigo-400 font-bold rounded text-xs uppercase">POST</span>
+            <div>
+              <h4 class="font-bold">Yaratish (Create)</h4>
+              <p class="text-sm text-slate-400">Serverga yangi ma'lumot qo'shish. Status: <code class="text-indigo-400">201 Created</code></p>
+            </div>
+          </div>
+          <div class="bg-slate-900 border-l-4 border-amber-500 p-4 rounded-r-xl flex items-start gap-4">
+            <span class="px-3 py-1 bg-amber-500/20 text-amber-400 font-bold rounded text-xs uppercase">PUT</span>
+            <div>
+              <h4 class="font-bold">Yangilash (Update)</h4>
+              <p class="text-sm text-slate-400">Mavjud ma'lumotlarni to'liq tahrirlash. Status: <code class="text-amber-400">200 OK</code></p>
+            </div>
+          </div>
+          <div class="bg-slate-900 border-l-4 border-rose-500 p-4 rounded-r-xl flex items-start gap-4">
+            <span class="px-3 py-1 bg-rose-500/20 text-rose-400 font-bold rounded text-xs uppercase">DELETE</span>
+            <div>
+              <h4 class="font-bold">O'chirish (Delete)</h4>
+              <p class="text-sm text-slate-400">Ma'lumotni bazadan o'chirish. Status: <code class="text-rose-400">200 OK</code></p>
+            </div>
+          </div>
+        </div>
 
-    // Fayldan rasm yuklash
-    function handleImageUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const base64String = e.target.result;
-          document.getElementById('image-url').value = base64String;
-          const preview = document.getElementById('image-preview');
-          preview.src = base64String;
-          document.getElementById('image-preview-container').classList.remove('hidden');
-        };
-        reader.readAsDataURL(file);
-      }
-    }
+        <!-- CRUD Vizual Rasm -->
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-xl flex flex-col items-center">
+          <img src="https://www.codestoresolutions.com/wp-content/uploads/2023/08/crud.webp" alt="CRUD Flow" class="w-full h-60 object-cover rounded-lg border border-slate-800 opacity-90">
+          <span class="text-xs text-slate-400 mt-2">Ma'lumotlar bazasi bo'ylab CRUD oqimi</span>
+        </div>
+      </div>
+    </div>
 
-    function openModal(isEdit = false) {
-      document.getElementById('modal-title').innerText = isEdit ? "Mahsulotni Tahrirlash" : "Yangi Mahsulot Qo'shish";
-      document.getElementById('modal').classList.remove('hidden');
-      document.getElementById('modal').classList.add('flex');
-    }
-
-    function closeModal() {
-      document.getElementById('modal').classList.add('hidden');
-      document.getElementById('modal').classList.remove('flex');
-      document.getElementById('product-form').reset();
-      document.getElementById('product-id').value = '';
-      document.getElementById('image-url').value = '';
-      document.getElementById('image-preview-container').classList.add('hidden');
-    }
-
-    // 2 & 3. POST / PUT So'rovlarini APIga yuborish
-    async function handleFormSubmit(e) {
-      e.preventDefault();
-      const id = document.getElementById('product-id').value;
-      const existingItem = id ? products.find(p => p.id == id) : null;
-
-      const imgVal = document.getElementById('image-url').value;
+    <!-- SLAYD 5: Postman nima va uning vazifasi -->
+    <div class="slide flex-col max-w-5xl space-y-6 animate__animated animate__fadeIn">
+      <h2 class="text-3xl font-bold text-indigo-400 flex items-center gap-3">
+        <i data-lucide="cpu" class="w-8 h-8"></i> 3. Postman — API Tester Tool
+      </h2>
+      <p class="text-slate-300 text-lg">
+        **Postman** — bu dasturchilar va testerlarga API so'rovlarini yuborish, javoblarini tahlil qilish imkonini beruvchi vosita.
+      </p>
       
-      // Siz taqdim etgan formatdagi images massivini shakllantirish
-      const imagesPayload = imgVal 
-        ? [{ url: imgVal, thumbnail: imgVal }] 
-        : (existingItem ? existingItem.images : [{ url: FALLBACK_IMAGE, thumbnail: FALLBACK_IMAGE }]);
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-xl space-y-4">
+          <h3 class="font-bold text-lg text-indigo-300 flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-5 h-5 text-indigo-400"></i> Asosiy Imkoniyatlari:
+          </h3>
+          <ul class="list-disc list-inside space-y-2 text-slate-400">
+            <li>HTTP so'rovlarini (GET, POST, PUT, DELETE) vizual tarzda yuborish.</li>
+            <li>Headers (Sarlavhalar) va Authorization (Tokenlar) bilan ishlash.</li>
+            <li>Collections (To'plamlar) yaratib, loyiha API'larini guruhlash.</li>
+          </ul>
+        </div>
+        
+        <!-- Postman Rasm -->
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-xl flex flex-col items-center">
+          <img src="https://vendure.io/_next/image?url=https%3A%2F%2Fassets.vendure.io%2Fblog%2Fskip-the-setup-exploring-vendure-apis-through-preconfigured-postman-collections%2Fpostmanblog.png&w=3840&q=75" alt="Postman API Testing" class=" object-cover rounded-lg border border-slate-800 opacity-90">
+          <span class="text-xs text-slate-400 mt-2">Postmanda so'rov yuborish va status kodni test qilish</span>
+        </div>
+      </div>
+    </div>
 
-      const payload = {
-        productName: document.getElementById('productName').value,
-        price: parseFloat(document.getElementById('price').value),
-        stock: parseInt(document.getElementById('stock').value) || 0,
-        category: document.getElementById('category').value,
-        description: document.getElementById('description').value,
-        images: imagesPayload
-      };
+  <div class="slide flex-col max-w-6xl space-y-4 animate__animated animate__fadeIn">
+      <h2 class="text-3xl font-bold text-indigo-400 flex items-center gap-3">
+        <i data-lucide="terminal" class="w-8 h-8"></i> 4. Postmanda CRUD Test qilish Amaliyoti
+      </h2>
+      
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+        <!-- Chap taraf: Metodlar va tushuntirish -->
+        <div class="md:col-span-6 space-y-2.5 text-slate-300 text-sm">
+          <div class="bg-emerald-950/30 border-l-4 border-emerald-500 p-3 rounded-r-xl shadow-sm">
+            <span class="text-emerald-400 font-bold font-mono">1. GET:</span> 
+            <code class="text-xs text-slate-300 font-mono">GET https://fake.jsonmockapi.com/products</code> — Ro'yxatni olish.
+          </div>
+          <div class="bg-blue-950/30 border-l-4 border-blue-500 p-3 rounded-r-xl shadow-sm">
+            <span class="text-blue-400 font-bold font-mono">2. POST:</span> 
+            `POST` orqali Body qismida JSON ma'lumot yuborish (<code class="text-blue-300">201 Created</code>).
+          </div>
+          <div class="bg-amber-950/30 border-l-4 border-amber-500 p-3 rounded-r-xl shadow-sm">
+            <span class="text-amber-400 font-bold font-mono">3. PUT:</span> 
+            `PUT /products/{id}` orqali ma'lumotlarni o'zgartirish.
+          </div>
+          <div class="bg-rose-950/30 border-l-4 border-rose-500 p-3 rounded-r-xl shadow-sm">
+            <span class="text-rose-400 font-bold font-mono">4. DELETE:</span> 
+            `DELETE /products/{id}` orqali o'chirish.
+          </div>
+        </div>
 
-      try {
-        if (id) {
-          // PUT So'rovi
-          await fetch(`${API_URL}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          
-          products = products.map(p => p.id == id ? { ...p, ...payload } : p);
-          showToast("Mahsulot serverda yangilandi!", "bg-emerald-600");
-        } else {
-          // POST So'rovi
-          const res = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const created = await res.json();
-          
-          const newProduct = { ...payload, id: created.id || Date.now() };
-          products.unshift(newProduct);
-          showToast("Mahsulot serverga qo'shildi!", "bg-emerald-600");
+        <!-- O'ng taraf: Siz bergan Postman rasm dizayni -->
+        <div class="md:col-span-6 bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-2xl flex flex-col items-center">
+          <img src="https://us1.discourse-cdn.com/getpostman/original/2X/2/29bfe7b93e4ac9bb856b121260c64a9bba2d7051.png" alt="Postman API Testing Interface" class="w-full h-56 object-cover rounded-lg border border-slate-800 shadow-inner">
+          <span class="text-xs text-slate-400 mt-2 font-medium">Postmanda so'rov yuborish va status kodni test qilish interfeysi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLAYD 7: Xulosa -->
+    <div class="slide flex-col items-center text-center max-w-3xl space-y-6 animate__animated animate__fadeIn">
+      <div class="p-4 bg-emerald-600/20 border border-emerald-500/30 rounded-full text-emerald-400 mb-2">
+        <i data-lucide="award" class="w-16 h-16"></i>
+      </div>
+      <h2 class="text-4xl font-bold text-white">Xulosa va Savollar</h2>
+      <p class="text-slate-300 text-lg">
+        REST API arxitekturasini to'g'ri loyihalash va uni Postman yordamida mukammal testlash sifatli veb-ilovalar yaratishning garovidir.
+      </p>
+      <a href="adminpanel.html" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-6 py-3 rounded-xl transition shadow-lg mt-2">
+        <span>📦 Jonli Admin Panelni Ochish</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </a>
+    </div>
+
+  </main>
+
+  <!-- Navigation Footer Controls -->
+  <footer class="bg-slate-900/80 backdrop-blur border-t border-slate-800 px-8 py-4 flex justify-between items-center z-10">
+    <button onclick="prevSlide()" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-5 py-2.5 rounded-lg font-medium transition cursor-pointer">
+      <i data-lucide="chevron-left" class="w-5 h-5"></i>
+      <span>Oldingi</span>
+    </button>
+    <button onclick="nextSlide()" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 px-6 py-2.5 rounded-lg font-medium shadow transition cursor-pointer">
+      <span>Keyingi</span>
+      <i data-lucide="chevron-right" class="w-5 h-5"></i>
+    </button>
+  </footer>
+
+  <!-- Script for Slide Navigation -->
+  <script>
+    lucide.createIcons();
+    
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const indicator = document.getElementById('slide-indicator');
+
+    function updateSlides() {
+      slides.forEach((slide, index) => {
+        slide.classList.remove('active');
+        if (index === currentSlide) {
+          slide.classList.add('active');
         }
-        renderProducts(products);
-        closeModal();
-      } catch (err) {
-        showToast("Server bilan aloqada xatolik yuz berdi!", "bg-red-500");
+      });
+      indicator.innerText = `Slayd ${currentSlide + 1} / ${slides.length}`;
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlides();
       }
     }
 
-    function editProduct(id) {
-      const item = products.find(p => p.id === id);
-      if (!item) return;
-
-      document.getElementById('product-id').value = item.id;
-      document.getElementById('productName').value = item.productName || '';
-      document.getElementById('price').value = item.price || 0;
-      document.getElementById('stock').value = item.stock || 0;
-      document.getElementById('category').value = item.category || '';
-      document.getElementById('description').value = item.description || '';
-
-      let currentImg = "";
-      if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-        currentImg = item.images[0].thumbnail || item.images[0].url || "";
-      }
-      
-      document.getElementById('image-url').value = currentImg;
-      if (currentImg) {
-        document.getElementById('image-preview').src = currentImg;
-        document.getElementById('image-preview-container').classList.remove('hidden');
-      }
-
-      openModal(true);
-    }
-
-    // 4. DELETE So'rovi
-    async function deleteProduct(id) {
-      if (!confirm("Haqiqatan ham bu mahsulotni o'chirmoqchimisiz?")) return;
-
-      try {
-        await fetch(`${API_URL}/${id}`, {
-          method: 'DELETE'
-        });
-
-        products = products.filter(p => p.id !== id);
-        renderProducts(products);
-        showToast("Mahsulot serverdan o'chirildi!", "bg-slate-700");
-      } catch (err) {
-        showToast("O'chirishda xatolik yuz berdi!", "bg-red-500");
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlides();
       }
     }
 
-    function showToast(message, bgColor) {
-      const toast = document.getElementById('toast');
-      toast.innerText = message;
-      toast.className = `mb-4 p-4 rounded-lg text-white font-medium shadow-md transition-all ${bgColor}`;
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
-    }
-
-    // Dastlabki ishga tushish
-    fetchProducts();
+    // Klaviatura orqali o'tish (O'ng va Chap strelkalar)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') nextSlide();
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+    });
   </script>
 </body>
-</html>  
+</html>
